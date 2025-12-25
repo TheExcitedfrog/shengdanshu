@@ -158,6 +158,50 @@
         min-height: 420px;
       }
 
+      .tree-gifts {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .tree-gift {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        background: rgba(12, 22, 36, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+        color: #f8f1dd;
+        transform: translate(-50%, -50%);
+        animation: hang 0.8s ease forwards;
+      }
+
+      .tree-gift::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 8px currentColor;
+        opacity: 0.9;
+      }
+
+      .tree-gift[data-theme="warm"] {
+        color: #f6c453;
+      }
+
+      .tree-gift[data-theme="cool"] {
+        color: #74b6ff;
+      }
+
+      .tree-gift[data-theme="soft"] {
+        color: #ff9cbc;
+      }
+
       .tree {
         width: min(360px, 80vw);
         height: auto;
@@ -362,6 +406,17 @@
         }
       }
 
+      @keyframes hang {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -60%) scale(0.9);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
       @media (max-width: 720px) {
         .tree-wrap {
           min-height: 360px;
@@ -397,6 +452,7 @@
       </section>
 
       <div class="tree-wrap">
+        <div class="tree-gifts" id="treeGifts" aria-hidden="true"></div>
         <div class="snow" aria-hidden="true">
           <span style="left: 15%; animation-duration: 12s; animation-delay: 0s;"></span>
           <span style="left: 32%; animation-duration: 9s; animation-delay: 2s;"></span>
@@ -463,6 +519,7 @@
       const result = document.getElementById("result");
       const giftList = document.getElementById("giftList");
       const giftEffect = document.getElementById("giftEffect");
+      const treeGifts = document.getElementById("treeGifts");
 
       const giftThemes = {
         "热可可礼券": "warm",
@@ -482,6 +539,19 @@
         cool: [0.3, 0.64, 1.0],
         soft: [1.0, 0.55, 0.7],
       };
+
+      const treePositions = [
+        { x: 46, y: 28 },
+        { x: 60, y: 34 },
+        { x: 40, y: 40 },
+        { x: 58, y: 46 },
+        { x: 36, y: 52 },
+        { x: 54, y: 58 },
+        { x: 42, y: 64 },
+        { x: 60, y: 70 },
+        { x: 38, y: 76 },
+        { x: 52, y: 82 },
+      ];
 
       const webgl = (() => {
         const canvas = document.getElementById("glCanvas");
@@ -643,6 +713,18 @@
             text.style.opacity = "0.5";
           }
           giftList.appendChild(li);
+        });
+        treeGifts.innerHTML = "";
+        draws.forEach((gift, index) => {
+          const tag = document.createElement("div");
+          const theme = giftThemes[gift] || "warm";
+          tag.className = "tree-gift";
+          tag.dataset.theme = theme;
+          const pos = treePositions[index % treePositions.length];
+          tag.style.left = `${pos.x}%`;
+          tag.style.top = `${pos.y}%`;
+          tag.textContent = gift;
+          treeGifts.appendChild(tag);
         });
       }
 
