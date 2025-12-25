@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>圣诞树抽礼物</title>
+    <style>
+      :root {
+        --bg-top: #0b1220;
+        --bg-mid: #0f1f38;
+        --bg-bottom: #162b4a;
+        --tree-dark: #0f4f3a;
+        --tree-light: #166b4e;
+        --gold: #f6c453;
+        --red: #d94b4b;
+        --blue: #4ea4ff;
+        --pink: #ff8bb0;
+        --snow: #f5f5f5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Averia Serif Libre", "Noto Serif SC", serif;
+        color: #f5f7fb;
+        background:
+          radial-gradient(1200px 500px at 50% -10%, #2a4a75 0%, transparent 70%),
+          linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 40%, var(--bg-bottom) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px 48px;
+      }
+
+      .scene {
+        width: min(960px, 100%);
+        display: grid;
+        gap: 28px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        align-items: center;
+      }
+
+      .panel {
+        background: rgba(10, 16, 30, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 24px;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 4vw, 44px);
+        letter-spacing: 1px;
+      }
+
+      p {
+        margin: 0 0 16px;
+        line-height: 1.6;
+        color: rgba(245, 247, 251, 0.85);
+      }
+
+      .gift-button {
+        appearance: none;
+        border: none;
+        background: linear-gradient(120deg, var(--gold), #ffdf8c);
+        color: #3a2a06;
+        font-weight: 700;
+        padding: 14px 22px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 16px;
+        box-shadow: 0 12px 24px rgba(246, 196, 83, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .gift-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .gift-button:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 16px 30px rgba(246, 196, 83, 0.45);
+      }
+
+      .result {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 14px;
+        background: rgba(22, 35, 58, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        min-height: 88px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .result strong {
+        font-size: 20px;
+        color: #fff7e2;
+      }
+
+      .sparkle {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sparkle::after {
+        content: "";
+        position: absolute;
+        inset: -50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 60%);
+        opacity: 0;
+        animation: sparkle 2.6s ease infinite;
+      }
+
+      @keyframes sparkle {
+        0%,
+        100% {
+          opacity: 0;
+          transform: translateY(30%);
+        }
+        40% {
+          opacity: 0.5;
+        }
+        70% {
+          opacity: 0;
+          transform: translateY(-20%);
+        }
+      }
+
+      .tree-wrap {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        min-height: 420px;
+      }
+
+      .tree {
+        width: min(360px, 80vw);
+        height: auto;
+        filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.45));
+      }
+
+      .ornament {
+        animation: float 3.8s ease-in-out infinite;
+        transform-origin: center;
+      }
+
+      .ornament.delay-1 {
+        animation-delay: 0.6s;
+      }
+
+      .ornament.delay-2 {
+        animation-delay: 1.2s;
+      }
+
+      .ornament.delay-3 {
+        animation-delay: 1.8s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
+
+      .snow {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .snow span {
+        position: absolute;
+        top: -10%;
+        width: 6px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        filter: blur(0.3px);
+        animation: fall linear infinite;
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(120vh);
+        }
+      }
+
+      .reset {
+        margin-top: 12px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #f2f6ff;
+        padding: 10px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s ease, border 0.2s ease;
+      }
+
+      .reset:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      .gift-list {
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+        color: rgba(245, 247, 251, 0.75);
+        font-size: 14px;
+      }
+
+      .gift-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(246, 196, 83, 0.2);
+        color: #ffdf8c;
+        font-size: 12px;
+      }
+
+      @media (max-width: 720px) {
+        .tree-wrap {
+          min-height: 360px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene">
+      <section class="panel sparkle">
+        <h1>圣诞树抽礼物</h1>
+        <p>点亮圣诞树，抽一份你的节日礼物。每次抽取会从礼物池里随机挑选。</p>
+        <button class="gift-button" id="drawButton">抽一次</button>
+        <button class="reset" id="resetButton">重置抽取记录</button>
+        <div class="result" id="result">
+          <span>还没有抽取礼物</span>
+          <strong>好运正在路上</strong>
+        </div>
+        <ul class="gift-list" id="giftList"></ul>
+      </section>
+
+      <div class="tree-wrap">
+        <div class="snow" aria-hidden="true">
+          <span style="left: 15%; animation-duration: 12s; animation-delay: 0s;"></span>
+          <span style="left: 32%; animation-duration: 9s; animation-delay: 2s;"></span>
+          <span style="left: 48%; animation-duration: 10s; animation-delay: 1s;"></span>
+          <span style="left: 63%; animation-duration: 11s; animation-delay: 3s;"></span>
+          <span style="left: 78%; animation-duration: 8s; animation-delay: 1.6s;"></span>
+          <span style="left: 90%; animation-duration: 13s; animation-delay: 2.8s;"></span>
+        </div>
+        <svg class="tree" viewBox="0 0 320 460" role="img" aria-label="装饰圣诞树">
+          <defs>
+            <linearGradient id="treeGrad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#1a7f5b" />
+              <stop offset="100%" stop-color="#0f4f3a" />
+            </linearGradient>
+            <linearGradient id="trunkGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stop-color="#704b28" />
+              <stop offset="100%" stop-color="#5a3a1e" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M160 25 L65 150 L110 150 L40 260 L95 260 L20 385 L300 385 L225 260 L280 260 L210 150 L255 150 Z"
+            fill="url(#treeGrad)"
+          />
+          <rect x="135" y="385" width="50" height="55" rx="6" fill="url(#trunkGrad)" />
+          <polygon points="160 5 170 28 195 28 175 43 182 67 160 52 138 67 145 43 125 28 150 28" fill="#f6c453" />
+          <circle class="ornament" cx="120" cy="170" r="10" fill="#d94b4b" />
+          <circle class="ornament delay-1" cx="195" cy="190" r="8" fill="#4ea4ff" />
+          <circle class="ornament delay-2" cx="95" cy="245" r="9" fill="#ff8bb0" />
+          <circle class="ornament delay-3" cx="220" cy="250" r="10" fill="#f6c453" />
+          <circle class="ornament delay-1" cx="70" cy="315" r="8" fill="#d94b4b" />
+          <circle class="ornament delay-2" cx="245" cy="320" r="9" fill="#4ea4ff" />
+          <path d="M80 220 C140 240 180 230 240 210" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none" />
+          <path d="M70 290 C140 320 200 300 250 280" stroke="rgba(255,255,255,0.5)" stroke-width="3" fill="none" />
+        </svg>
+      </div>
+    </div>
+
+    <script>
+      const gifts = [
+        "热可可礼券",
+        "圣诞袜盲盒",
+        "冬日电影票",
+        "手作烘焙体验",
+        "暖心围巾",
+        "节日香氛蜡烛",
+        "圣诞书单一本",
+        "小小加薪红包",
+        "限量热饮杯",
+        "惊喜神秘礼物",
+      ];
+
+      const storageKey = "xmas-gift-draws";
+      const drawButton = document.getElementById("drawButton");
+      const resetButton = document.getElementById("resetButton");
+      const result = document.getElementById("result");
+      const giftList = document.getElementById("giftList");
+
+      function loadDraws() {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return [];
+        try {
+          return JSON.parse(raw);
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function saveDraws(draws) {
+        localStorage.setItem(storageKey, JSON.stringify(draws));
+      }
+
+      function renderList(draws) {
+        giftList.innerHTML = "";
+        gifts.forEach((gift, index) => {
+          const li = document.createElement("li");
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = index + 1;
+          li.appendChild(badge);
+          const text = document.createElement("span");
+          text.textContent = gift;
+          li.appendChild(text);
+          if (draws.includes(gift)) {
+            text.style.textDecoration = "line-through";
+            text.style.opacity = "0.5";
+          }
+          giftList.appendChild(li);
+        });
+      }
+
+      function pickGift() {
+        const draws = loadDraws();
+        const pool = gifts.filter((gift) => !draws.includes(gift));
+        if (pool.length === 0) {
+          result.innerHTML = "<span>礼物池已抽完</span><strong>请先重置</strong>";
+          drawButton.disabled = true;
+          return;
+        }
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        draws.push(pick);
+        saveDraws(draws);
+        result.innerHTML = `<span>你抽到了</span><strong>${pick}</strong>`;
+        renderList(draws);
+        if (draws.length === gifts.length) {
+          drawButton.disabled = true;
+        }
+      }
+
+      function resetDraws() {
+        localStorage.removeItem(storageKey);
+        drawButton.disabled = false;
+        result.innerHTML = "<span>抽取记录已清空</span><strong>再抽一份吧</strong>";
+        renderList([]);
+      }
+
+      drawButton.addEventListener("click", pickGift);
+      resetButton.addEventListener("click", resetDraws);
+
+      renderList(loadDraws());
+    </script>
+  </body>
+</html>
