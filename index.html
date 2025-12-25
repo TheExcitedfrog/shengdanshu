@@ -36,12 +36,23 @@
         padding: 32px 16px 48px;
       }
 
+      #glCanvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
       .scene {
         width: min(960px, 100%);
         display: grid;
         gap: 28px;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         align-items: center;
+        position: relative;
+        z-index: 1;
       }
 
       .panel {
@@ -100,6 +111,8 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+        position: relative;
+        overflow: hidden;
       }
 
       .result strong {
@@ -246,6 +259,109 @@
         font-size: 12px;
       }
 
+      .gift-effect {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .gift-effect.active {
+        animation: gift-pop 1.4s ease forwards;
+      }
+
+      .gift-effect::before,
+      .gift-effect::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        opacity: 0;
+      }
+
+      .gift-effect.active::before {
+        width: 60px;
+        height: 60px;
+        top: 10%;
+        left: 12%;
+        animation: ring 1.2s ease forwards;
+      }
+
+      .gift-effect.active::after {
+        width: 90px;
+        height: 90px;
+        bottom: 5%;
+        right: 15%;
+        animation: ring 1.2s ease forwards 0.1s;
+      }
+
+      .gift-effect .ribbon {
+        position: absolute;
+        inset: 18% 10%;
+        border-radius: 18px;
+        background: linear-gradient(120deg, rgba(246, 196, 83, 0.2), rgba(255, 255, 255, 0));
+        mix-blend-mode: screen;
+        opacity: 0;
+      }
+
+      .gift-effect.active .ribbon {
+        animation: ribbon 1.2s ease forwards;
+      }
+
+      .gift-effect[data-theme="warm"] .ribbon {
+        background: linear-gradient(120deg, rgba(217, 75, 75, 0.35), rgba(255, 255, 255, 0));
+      }
+
+      .gift-effect[data-theme="cool"] .ribbon {
+        background: linear-gradient(120deg, rgba(78, 164, 255, 0.35), rgba(255, 255, 255, 0));
+      }
+
+      .gift-effect[data-theme="soft"] .ribbon {
+        background: linear-gradient(120deg, rgba(255, 139, 176, 0.35), rgba(255, 255, 255, 0));
+      }
+
+      @keyframes gift-pop {
+        0% {
+          opacity: 0;
+          transform: scale(0.96);
+        }
+        40% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.02);
+        }
+      }
+
+      @keyframes ring {
+        0% {
+          opacity: 0;
+          transform: scale(0.4);
+        }
+        60% {
+          opacity: 0.7;
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.2);
+        }
+      }
+
+      @keyframes ribbon {
+        0% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        30% {
+          opacity: 0.7;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+
       @media (max-width: 720px) {
         .tree-wrap {
           min-height: 360px;
@@ -273,6 +389,9 @@
         <div class="result" id="result">
           <span>还没有抽取礼物</span>
           <strong>好运正在路上</strong>
+          <div class="gift-effect" id="giftEffect" data-theme="warm">
+            <div class="ribbon"></div>
+          </div>
         </div>
         <ul class="gift-list" id="giftList"></ul>
       </section>
@@ -296,11 +415,18 @@
               <stop offset="0%" stop-color="#704b28" />
               <stop offset="100%" stop-color="#5a3a1e" />
             </linearGradient>
+            <linearGradient id="garland" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stop-color="#f6c453" />
+              <stop offset="100%" stop-color="#ffdf8c" />
+            </linearGradient>
           </defs>
           <path
-            d="M160 25 L65 150 L110 150 L40 260 L95 260 L20 385 L300 385 L225 260 L280 260 L210 150 L255 150 Z"
+            d="M160 22 L75 145 L120 145 L50 255 L110 255 L30 380 L290 380 L210 255 L270 255 L200 145 L245 145 Z"
             fill="url(#treeGrad)"
           />
+          <path d="M90 188 C150 208 190 204 235 184" stroke="url(#garland)" stroke-width="4" fill="none" />
+          <path d="M78 255 C150 284 205 270 255 247" stroke="url(#garland)" stroke-width="4" fill="none" />
+          <path d="M65 320 C150 350 220 335 265 310" stroke="url(#garland)" stroke-width="4" fill="none" />
           <rect x="135" y="385" width="50" height="55" rx="6" fill="url(#trunkGrad)" />
           <polygon points="160 5 170 28 195 28 175 43 182 67 160 52 138 67 145 43 125 28 150 28" fill="#f6c453" />
           <circle class="ornament" cx="120" cy="170" r="10" fill="#d94b4b" />
@@ -314,6 +440,8 @@
         </svg>
       </div>
     </div>
+
+    <canvas id="glCanvas" aria-hidden="true"></canvas>
 
     <script>
       const gifts = [
@@ -334,6 +462,156 @@
       const resetButton = document.getElementById("resetButton");
       const result = document.getElementById("result");
       const giftList = document.getElementById("giftList");
+      const giftEffect = document.getElementById("giftEffect");
+
+      const giftThemes = {
+        "热可可礼券": "warm",
+        "圣诞袜盲盒": "soft",
+        "冬日电影票": "cool",
+        "手作烘焙体验": "warm",
+        "暖心围巾": "soft",
+        "节日香氛蜡烛": "warm",
+        "圣诞书单一本": "cool",
+        "小小加薪红包": "warm",
+        "限量热饮杯": "cool",
+        "惊喜神秘礼物": "soft",
+      };
+
+      const themeColors = {
+        warm: [0.85, 0.35, 0.35],
+        cool: [0.3, 0.64, 1.0],
+        soft: [1.0, 0.55, 0.7],
+      };
+
+      const webgl = (() => {
+        const canvas = document.getElementById("glCanvas");
+        const gl = canvas.getContext("webgl", { antialias: true, premultipliedAlpha: false });
+        if (!gl) return null;
+
+        const vertexSource = `
+          attribute vec2 aPosition;
+          attribute vec4 aColor;
+          attribute float aSize;
+          varying vec4 vColor;
+          void main() {
+            gl_Position = vec4(aPosition, 0.0, 1.0);
+            gl_PointSize = aSize;
+            vColor = aColor;
+          }
+        `;
+        const fragmentSource = `
+          precision mediump float;
+          varying vec4 vColor;
+          void main() {
+            vec2 coord = gl_PointCoord - vec2(0.5);
+            float dist = length(coord);
+            float alpha = smoothstep(0.5, 0.1, dist);
+            gl_FragColor = vec4(vColor.rgb, vColor.a * alpha);
+          }
+        `;
+
+        function compile(type, source) {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          return shader;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        const positionLoc = gl.getAttribLocation(program, "aPosition");
+        const colorLoc = gl.getAttribLocation(program, "aColor");
+        const sizeLoc = gl.getAttribLocation(program, "aSize");
+
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+        gl.enableVertexAttribArray(positionLoc);
+        gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 28, 0);
+        gl.enableVertexAttribArray(colorLoc);
+        gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 28, 8);
+        gl.enableVertexAttribArray(sizeLoc);
+        gl.vertexAttribPointer(sizeLoc, 1, gl.FLOAT, false, 28, 24);
+
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+        const stars = Array.from({ length: 160 }, () => ({
+          x: Math.random() * 2 - 1,
+          y: Math.random() * 2 - 1,
+          size: 1.5 + Math.random() * 2.5,
+          speed: 0.0002 + Math.random() * 0.0006,
+          twinkle: Math.random() * Math.PI * 2,
+        }));
+
+        const bursts = [];
+
+        function resize() {
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = window.innerWidth * ratio;
+          canvas.height = window.innerHeight * ratio;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        function addBurst(color) {
+          for (let i = 0; i < 40; i += 1) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 0.002 + Math.random() * 0.004;
+            bursts.push({
+              x: (Math.random() * 0.5 - 0.25),
+              y: (Math.random() * 0.2 - 0.1),
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 1,
+              size: 6 + Math.random() * 6,
+              color,
+            });
+          }
+        }
+
+        function update() {
+          const data = [];
+          stars.forEach((star) => {
+            star.y -= star.speed;
+            if (star.y < -1.2) star.y = 1.2;
+            star.twinkle += 0.02;
+            const alpha = 0.3 + Math.sin(star.twinkle) * 0.2;
+            data.push(star.x, star.y, 0.5, 0.7, 1.0, alpha, star.size);
+          });
+
+          for (let i = bursts.length - 1; i >= 0; i -= 1) {
+            const p = bursts[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            if (p.life <= 0) {
+              bursts.splice(i, 1);
+              continue;
+            }
+            data.push(p.x, p.y, p.color[0], p.color[1], p.color[2], p.life, p.size);
+          }
+
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+
+          if (data.length) {
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+            gl.drawArrays(gl.POINTS, 0, data.length / 7);
+          }
+
+          requestAnimationFrame(update);
+        }
+
+        resize();
+        requestAnimationFrame(update);
+        window.addEventListener("resize", resize);
+
+        return { addBurst };
+      })();
 
       function loadDraws() {
         const raw = localStorage.getItem(storageKey);
@@ -380,6 +658,15 @@
         draws.push(pick);
         saveDraws(draws);
         result.innerHTML = `<span>你抽到了</span><strong>${pick}</strong>`;
+        result.appendChild(giftEffect);
+        const theme = giftThemes[pick] || "warm";
+        giftEffect.dataset.theme = theme;
+        giftEffect.classList.remove("active");
+        void giftEffect.offsetWidth;
+        giftEffect.classList.add("active");
+        if (webgl) {
+          webgl.addBurst(themeColors[theme] || themeColors.warm);
+        }
         renderList(draws);
         if (draws.length === gifts.length) {
           drawButton.disabled = true;
