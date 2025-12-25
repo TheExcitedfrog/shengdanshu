@@ -162,6 +162,7 @@
         position: absolute;
         inset: 0;
         pointer-events: none;
+        z-index: 3;
       }
 
       .tree-gift {
@@ -171,23 +172,28 @@
         gap: 6px;
         padding: 6px 10px;
         border-radius: 999px;
-        font-size: 12px;
-        background: rgba(12, 22, 36, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(12, 22, 36, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
         color: #f8f1dd;
         transform: translate(-50%, -50%);
         animation: hang 0.8s ease forwards;
       }
 
-      .tree-gift::before {
-        content: "";
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: currentColor;
-        box-shadow: 0 0 8px currentColor;
-        opacity: 0.9;
+      .tree-gift svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+      }
+
+      .tree-gift .glow {
+        position: absolute;
+        inset: -12%;
+        background: radial-gradient(circle, currentColor 0%, transparent 65%);
+        opacity: 0.35;
+        filter: blur(6px);
+        animation: pulse 2.2s ease-in-out infinite;
       }
 
       .tree-gift[data-theme="warm"] {
@@ -200,6 +206,15 @@
 
       .tree-gift[data-theme="soft"] {
         color: #ff9cbc;
+      }
+
+      .tree {
+        position: relative;
+        z-index: 1;
+      }
+
+      .snow {
+        z-index: 2;
       }
 
       .tree {
@@ -417,6 +432,18 @@
         }
       }
 
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.25;
+          transform: scale(0.95);
+        }
+        50% {
+          opacity: 0.55;
+          transform: scale(1.05);
+        }
+      }
+
       @media (max-width: 720px) {
         .tree-wrap {
           min-height: 360px;
@@ -452,7 +479,6 @@
       </section>
 
       <div class="tree-wrap">
-        <div class="tree-gifts" id="treeGifts" aria-hidden="true"></div>
         <div class="snow" aria-hidden="true">
           <span style="left: 15%; animation-duration: 12s; animation-delay: 0s;"></span>
           <span style="left: 32%; animation-duration: 9s; animation-delay: 2s;"></span>
@@ -494,6 +520,7 @@
           <path d="M80 220 C140 240 180 230 240 210" stroke="rgba(255,255,255,0.6)" stroke-width="3" fill="none" />
           <path d="M70 290 C140 320 200 300 250 280" stroke="rgba(255,255,255,0.5)" stroke-width="3" fill="none" />
         </svg>
+        <div class="tree-gifts" id="treeGifts" aria-hidden="true"></div>
       </div>
     </div>
 
@@ -540,18 +567,189 @@
         soft: [1.0, 0.55, 0.7],
       };
 
-      const treePositions = [
-        { x: 46, y: 28 },
-        { x: 60, y: 34 },
-        { x: 40, y: 40 },
-        { x: 58, y: 46 },
-        { x: 36, y: 52 },
-        { x: 54, y: 58 },
-        { x: 42, y: 64 },
-        { x: 60, y: 70 },
-        { x: 38, y: 76 },
-        { x: 52, y: 82 },
-      ];
+      const giftVisuals = {
+        "热可可礼券": { theme: "warm", width: 70, height: 50, icon: "ticket" },
+        "圣诞袜盲盒": { theme: "soft", width: 64, height: 64, icon: "stocking" },
+        "冬日电影票": { theme: "cool", width: 74, height: 46, icon: "film" },
+        "手作烘焙体验": { theme: "warm", width: 62, height: 60, icon: "cookie" },
+        "暖心围巾": { theme: "soft", width: 70, height: 50, icon: "scarf" },
+        "节日香氛蜡烛": { theme: "warm", width: 60, height: 68, icon: "candle" },
+        "圣诞书单一本": { theme: "cool", width: 66, height: 60, icon: "book" },
+        "小小加薪红包": { theme: "warm", width: 60, height: 64, icon: "envelope" },
+        "限量热饮杯": { theme: "cool", width: 58, height: 68, icon: "cup" },
+        "惊喜神秘礼物": { theme: "soft", width: 70, height: 70, icon: "gift" },
+      };
+
+      function iconSvg(icon, theme) {
+        const color = theme === "cool" ? "#7bb7ff" : theme === "soft" ? "#ff9cbc" : "#f6c453";
+        const accent = theme === "cool" ? "#2b6cb0" : theme === "soft" ? "#d64d79" : "#b36a10";
+        switch (icon) {
+          case "ticket":
+            return `
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="14" width="108" height="52" rx="10" fill="${color}" />
+                <path d="M28 14 v52" stroke="${accent}" stroke-width="4" stroke-dasharray="6 6"/>
+                <circle cx="78" cy="40" r="10" fill="${accent}" opacity="0.6"/>
+              </svg>
+            `;
+          case "stocking":
+            return `
+              <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                <path d="M28 10 h30 v40 c0 22 20 30 32 30 v26 h-40 c-18 0-32-14-32-32 v-12 c0-14 6-26 10-32z" fill="${color}"/>
+                <rect x="22" y="4" width="48" height="14" rx="6" fill="${accent}"/>
+              </svg>
+            `;
+          case "film":
+            return `
+              <svg viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="12" width="120" height="56" rx="12" fill="${color}"/>
+                <rect x="38" y="22" width="64" height="36" rx="6" fill="${accent}" opacity="0.7"/>
+                <g fill="#0b1220">
+                  <rect x="16" y="20" width="10" height="8" rx="2"/>
+                  <rect x="16" y="36" width="10" height="8" rx="2"/>
+                  <rect x="16" y="52" width="10" height="8" rx="2"/>
+                  <rect x="114" y="20" width="10" height="8" rx="2"/>
+                  <rect x="114" y="36" width="10" height="8" rx="2"/>
+                  <rect x="114" y="52" width="10" height="8" rx="2"/>
+                </g>
+              </svg>
+            `;
+          case "cookie":
+            return `
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="36" fill="${color}"/>
+                <circle cx="34" cy="42" r="6" fill="${accent}" opacity="0.7"/>
+                <circle cx="60" cy="34" r="5" fill="${accent}" opacity="0.7"/>
+                <circle cx="64" cy="60" r="6" fill="${accent}" opacity="0.7"/>
+              </svg>
+            `;
+          case "scarf":
+            return `
+              <svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">
+                <rect x="18" y="26" width="84" height="22" rx="10" fill="${color}"/>
+                <rect x="36" y="46" width="18" height="30" rx="8" fill="${accent}"/>
+                <rect x="64" y="46" width="18" height="30" rx="8" fill="${accent}"/>
+              </svg>
+            `;
+          case "candle":
+            return `
+              <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                <rect x="26" y="40" width="48" height="60" rx="10" fill="${color}"/>
+                <path d="M50 10 C62 26 42 36 50 48 C36 40 36 24 50 10" fill="${accent}"/>
+              </svg>
+            `;
+          case "book":
+            return `
+              <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 18 h40 v64 h-40 c-8 0-14-6-14-14 v-36 c0-8 6-14 14-14z" fill="${color}"/>
+                <path d="M60 18 h40 c8 0 14 6 14 14 v36 c0 8-6 14-14 14 h-40z" fill="${accent}"/>
+              </svg>
+            `;
+          case "envelope":
+            return `
+              <svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">
+                <rect x="12" y="18" width="96" height="54" rx="10" fill="${color}"/>
+                <path d="M12 20 L60 52 L108 20" stroke="${accent}" stroke-width="6" fill="none"/>
+              </svg>
+            `;
+          case "cup":
+            return `
+              <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                <rect x="26" y="30" width="48" height="62" rx="12" fill="${color}"/>
+                <rect x="34" y="20" width="32" height="10" rx="5" fill="${accent}"/>
+                <path d="M74 40 h10 c8 0 12 8 6 16 l-6 10 h-10" stroke="${accent}" stroke-width="6" fill="none"/>
+              </svg>
+            `;
+          case "gift":
+          default:
+            return `
+              <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="46" width="80" height="56" rx="12" fill="${color}"/>
+                <rect x="20" y="34" width="80" height="16" rx="8" fill="${accent}"/>
+                <rect x="56" y="34" width="8" height="68" fill="#f5f5f5"/>
+                <path d="M44 26 c0-10 16-10 16 0 c0 6-8 10-16 10" fill="${color}"/>
+                <path d="M76 26 c0-10-16-10-16 0 c0 6 8 10 16 10" fill="${color}"/>
+              </svg>
+            `;
+        }
+      }
+
+      function seededRandom(seed) {
+        let hash = 2166136261;
+        for (let i = 0; i < seed.length; i += 1) {
+          hash ^= seed.charCodeAt(i);
+          hash = Math.imul(hash, 16777619);
+        }
+        return () => {
+          hash += 0x6d2b79f5;
+          let t = Math.imul(hash ^ (hash >>> 15), 1 | hash);
+          t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function layoutTreeGifts(draws) {
+        treeGifts.innerHTML = "";
+        const wrap = document.querySelector(".tree-wrap");
+        const rect = wrap.getBoundingClientRect();
+        const area = {
+          left: rect.width * 0.22,
+          right: rect.width * 0.78,
+          top: rect.height * 0.08,
+          bottom: rect.height * 0.82,
+        };
+        const placed = [];
+        draws.forEach((gift, index) => {
+          const visual = giftVisuals[gift] || {
+            theme: giftThemes[gift] || "warm",
+            width: 64,
+            height: 64,
+            icon: "gift",
+          };
+          const tag = document.createElement("div");
+          tag.className = "tree-gift";
+          tag.dataset.theme = visual.theme;
+          tag.style.width = `${visual.width}px`;
+          tag.style.height = `${visual.height}px`;
+          tag.innerHTML = `<div class="glow"></div>${iconSvg(visual.icon, visual.theme)}`;
+          treeGifts.appendChild(tag);
+
+          const rng = seededRandom(`${gift}-${index}`);
+          let placedRect = null;
+          for (let attempt = 0; attempt < 40; attempt += 1) {
+            const x = area.left + rng() * (area.right - area.left);
+            const y = area.top + rng() * (area.bottom - area.top);
+            const rectBox = {
+              left: x - visual.width / 2,
+              right: x + visual.width / 2,
+              top: y - visual.height / 2,
+              bottom: y + visual.height / 2,
+            };
+            const overlaps = placed.some((p) =>
+              !(rectBox.right < p.left + 6 || rectBox.left > p.right - 6 || rectBox.bottom < p.top + 6 || rectBox.top > p.bottom - 6)
+            );
+            if (!overlaps) {
+              placedRect = rectBox;
+              tag.style.left = `${x}px`;
+              tag.style.top = `${y}px`;
+              placed.push(rectBox);
+              break;
+            }
+          }
+          if (!placedRect) {
+            const fallbackX = area.left + ((index + 1) / (draws.length + 1)) * (area.right - area.left);
+            const fallbackY = area.top + (index % 3) * (visual.height + 12);
+            tag.style.left = `${fallbackX}px`;
+            tag.style.top = `${fallbackY}px`;
+            placed.push({
+              left: fallbackX - visual.width / 2,
+              right: fallbackX + visual.width / 2,
+              top: fallbackY - visual.height / 2,
+              bottom: fallbackY + visual.height / 2,
+            });
+          }
+        });
+      }
 
       const webgl = (() => {
         const canvas = document.getElementById("glCanvas");
@@ -714,18 +912,7 @@
           }
           giftList.appendChild(li);
         });
-        treeGifts.innerHTML = "";
-        draws.forEach((gift, index) => {
-          const tag = document.createElement("div");
-          const theme = giftThemes[gift] || "warm";
-          tag.className = "tree-gift";
-          tag.dataset.theme = theme;
-          const pos = treePositions[index % treePositions.length];
-          tag.style.left = `${pos.x}%`;
-          tag.style.top = `${pos.y}%`;
-          tag.textContent = gift;
-          treeGifts.appendChild(tag);
-        });
+        requestAnimationFrame(() => layoutTreeGifts(draws));
       }
 
       function pickGift() {
